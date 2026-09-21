@@ -25,11 +25,11 @@ def main() -> None:
             raise SystemExit(f"wheel not found: {wheel}")
     benchmark_metadata = metadata(benchmark)
     orchestrator_metadata = metadata(orchestrator)
-    if (benchmark_metadata["Name"], benchmark_metadata["Version"]) != ("factorio-benchmark", "0.1.1"):
-        raise SystemExit("benchmark wheel metadata is not factorio-benchmark 0.1.1")
+    if (benchmark_metadata["Name"], benchmark_metadata["Version"]) != ("factorio-benchmark", "0.1.2"):
+        raise SystemExit("benchmark wheel metadata is not factorio-benchmark 0.1.2")
     requirements = [requirement.replace(" ", "") for requirement in orchestrator_metadata.get_all("Requires-Dist", [])]
-    if "factorio-benchmark==0.1.1" not in requirements:
-        raise SystemExit("orchestrator wheel must require factorio-benchmark ==0.1.1")
+    if "factorio-benchmark==0.1.2" not in requirements:
+        raise SystemExit("orchestrator wheel must require factorio-benchmark ==0.1.2")
     with tempfile.TemporaryDirectory() as temporary_directory:
         environment = Path(temporary_directory) / "venv"
         python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
@@ -37,29 +37,42 @@ def main() -> None:
         subprocess.run(["uv", "pip", "install", "--python", str(python), "--no-deps",
                         str(benchmark), str(orchestrator)], check=True)
         subprocess.run([str(python), "-I", "-c", '''
-import argparse
 import importlib.metadata
 from pathlib import Path
+import tempfile
 from unittest.mock import patch
 
 from factorio_benchmark.smelt_session import SmeltSessionRuntime, run_smelt_callback_session
+from factorio_benchmark.assets import runtime_assets
 
-assert importlib.metadata.version("factorio-benchmark") == "0.1.1"
-assert importlib.metadata.version("factorio-orchestrator") == "0.1.1"
+assert importlib.metadata.version("factorio-benchmark") == "0.1.2"
+assert importlib.metadata.version("factorio-orchestrator") == "0.1.2"
 assert "site-packages" in Path(__import__("factorio_benchmark").__file__).parts
-runtime = SmeltSessionRuntime(
-    factorio=Path("/factorio/bin/x64/factorio"),
-    control_python=Path("/usr/bin/python3"),
-    mod_archive=Path("/mods/factorio-player-mcp.zip"),
-    client_template=Path("/client-template"),
-    runs_dir=Path("/runs"),
-    run_name="callback-run",
-)
+assets = runtime_assets()
+assert all(path.is_file() for path in (assets.broker, assets.scenario, assets.baseline))
+assert "site-packages/scripts" not in str(assets.broker)
 async def callback(request):
     return {"answer": "done"}
-with patch("factorio_benchmark.smelt_session.run_smelt_session", return_value={"terminal_status": "completed"}) as run:
-    assert run_smelt_callback_session(runtime=runtime, model_id="test-model", callback=callback) == {"terminal_status": "completed"}
-assert isinstance(run.call_args.args[0], argparse.Namespace)
+calls = []
+class Result:
+    returncode = 0
+    stdout = ""
+    stderr = ""
+def checked(command, **kwargs):
+    calls.append(command)
+    return Result()
+with tempfile.TemporaryDirectory() as directory, patch(
+    "factorio_benchmark.smelt_session.subprocess.run", side_effect=checked,
+):
+    result = run_smelt_callback_session(runtime=SmeltSessionRuntime(
+        factorio=Path("/factorio/bin/x64/factorio"),
+        control_python=Path("/control-venv/bin/python"),
+        mod_archive=Path("/mods/factorio-player-mcp.zip"),
+        client_template=Path("/client-template"), runs_dir=Path(directory),
+        run_name="callback-run",
+    ), model_id="test-model", callback=callback)
+assert calls[0] == ["/control-venv/bin/python", str(assets.broker), "--check-runtime"]
+assert result["terminal_status"] == "runner_failed"
 '''], check=True, cwd=temporary_directory)
     print("wheel metadata and installed callback-session smoke passed")
 
