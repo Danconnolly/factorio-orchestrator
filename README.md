@@ -21,6 +21,7 @@ examples, not defaults:
 ```json
 {
   "model_id": "qwen3.8@sha256:REPLACE_WITH_RECORDED_DIGEST",
+  "inspect_model": "openai/qwen3.8",
   "model_base_url": "http://127.0.0.1:11434/v1",
   "runtime": {
     "factorio": "/opt/factorio/bin/x64/factorio",
@@ -31,6 +32,15 @@ examples, not defaults:
   }
 }
 ```
+
+`model_id` is the digest-qualified, immutable model identity recorded in
+benchmark task metadata. `inspect_model` is the explicit Inspect
+model/provider ID used to execute the evaluation (for example,
+`openai/qwen3.8`); it is deliberately not inferred from, nor used to replace,
+`model_id`. Both fields are required, so older configuration files without
+`inspect_model` fail closed rather than recording an ambiguous or unpinned run.
+`model_base_url` is passed explicitly with `inspect_model` to Inspect, so the
+callback's `model="inspect"` agent bridge uses that active model.
 
 The model API key is runtime-only (for example `OPENAI_API_KEY`) and never
 goes to benchmark artifacts. The in-process callback receives only the

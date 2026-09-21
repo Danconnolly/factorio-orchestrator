@@ -16,7 +16,10 @@ class RuntimePaths:
 
 @dataclass(frozen=True)
 class OrchestrationConfig:
+    # `model_id` is immutable benchmark provenance; this is the provider ID
+    # supplied to Inspect for execution and is intentionally separate.
     model_id: str
+    inspect_model: str
     model_base_url: str
     runtime: RuntimePaths
 
@@ -25,6 +28,12 @@ class OrchestrationConfig:
         model_id = value.get("model_id")
         if not isinstance(model_id, str) or not re.fullmatch(r"[^@\s]+@sha256:[0-9a-f]{64}", model_id):
             raise ValueError("model_id must be a pinned digest identity")
+        inspect_model = value.get("inspect_model")
+        if not isinstance(inspect_model, str) or not inspect_model.strip():
+            raise ValueError(
+                "inspect_model must be an explicit non-empty Inspect model/provider ID; "
+                "it cannot be inferred from model_id"
+            )
         base_url = value.get("model_base_url")
         if not isinstance(base_url, str) or not base_url.startswith(("http://", "https://")):
             raise ValueError("model_base_url must be an explicit HTTP URL")
@@ -34,5 +43,5 @@ class OrchestrationConfig:
         names = ("factorio", "control_python", "mod_archive", "client_template", "runs_dir")
         if any(not isinstance(runtime.get(name), str) or not runtime[name] for name in names):
             raise ValueError("all explicit runtime paths are required")
-        return cls(model_id=model_id, model_base_url=base_url,
+        return cls(model_id=model_id, inspect_model=inspect_model, model_base_url=base_url,
                    runtime=RuntimePaths(**{name: Path(runtime[name]) for name in names}))

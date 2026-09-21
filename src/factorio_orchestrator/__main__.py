@@ -29,7 +29,11 @@ def main() -> None:
     async def callback(request):
         return await run_openai_agent(request, config=agent_config)
 
-    eval(smelt_one_iron_plate(runtime=runtime, model_id=config.model_id, callback=callback))
+    eval(
+        smelt_one_iron_plate(runtime=runtime, model_id=config.model_id, callback=callback),
+        model=config.inspect_model,
+        model_base_url=config.model_base_url,
+    )
 
 
 if __name__ == "__main__":
