@@ -55,10 +55,12 @@ The wheel smoke test validates the exact sibling-wheel requirement and installs
 both wheels with `--no-deps` into a temporary target. It is a structural smoke
 test, not a claim that a network-free full dependency installation is possible.
 
-Inspect 0.3.266's fake-eval smoke currently emits AnyIO
-`MemoryObjectReceiveStream` `ResourceWarning`s from site-packages (reproduced
-with this project's fake session runner). Run that smoke with
-`PYTHONWARNINGS='error::ResourceWarning'` while the upstream behavior remains:
+Inspect 0.3.266's fake-eval smoke can leave AnyIO
+`MemoryObjectReceiveStream` instances for third-party finalization. The smoke
+tests explicitly collect them under a narrowly scoped filter for that exact
+AnyIO `ResourceWarning`; no suite-wide warning setting is needed, and other
+`ResourceWarning`s remain visible. To check the focused smoke tests with
+warnings promoted to errors:
 
 ```bash
 PYTHONWARNINGS='error::ResourceWarning' uv run python -m unittest discover -s tests -p 'test_inspect_smoke.py' -v
