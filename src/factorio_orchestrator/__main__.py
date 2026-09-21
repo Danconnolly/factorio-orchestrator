@@ -1,6 +1,5 @@
 """Command-line entry point for one explicit Inspect benchmark evaluation."""
 import argparse
-import asyncio
 import json
 import os
 from pathlib import Path
@@ -27,8 +26,8 @@ def main() -> None:
     runtime = SmeltSessionRuntime(**config.runtime.__dict__, run_name=args.run_name)
     agent_config = OpenAICompatibleAgentConfig(base_url=config.model_base_url, api_key=api_key)
 
-    def callback(request):
-        return asyncio.run(run_openai_agent(request, config=agent_config))
+    async def callback(request):
+        return await run_openai_agent(request, config=agent_config)
 
     eval(smelt_one_iron_plate(runtime=runtime, model_id=config.model_id, callback=callback))
 

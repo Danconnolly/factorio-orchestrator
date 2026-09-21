@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable, Mapping
+import hashlib
+from pathlib import Path
+from typing import Any, Awaitable, Callable, Mapping
 
 from inspect_ai import Task, task
 from inspect_ai.dataset import Sample
@@ -24,7 +26,7 @@ def evaluator_only_score():
 
 
 def benchmark_session_solver(*, runtime: SmeltSessionRuntime, model_id: str,
-                             callback: Callable[[CallbackRequest], Mapping[str, Any]],
+                             callback: Callable[[CallbackRequest], Awaitable[Mapping[str, Any]]],
                              session_runner: Callable[..., Mapping[str, Any]] = run_smelt_callback_session) -> Solver:
     @solver
     def solve() -> Solver:
@@ -33,8 +35,14 @@ def benchmark_session_solver(*, runtime: SmeltSessionRuntime, model_id: str,
                 session_runner, runtime=runtime, model_id=model_id, callback=callback,
             )
             state.store.set("benchmark_result", result)
-            state.metadata["benchmark_run_bundle"] = result.get("run_bundle_path", str(runtime.runs_dir / runtime.run_name))
+            bundle = Path(result.get("run_bundle_path", runtime.runs_dir / runtime.run_name)).resolve()
+            manifest = bundle / "run-manifest.json"
+            state.metadata["benchmark_run_bundle"] = str(bundle)
             state.metadata["benchmark_terminal_status"] = result.get("terminal_status")
+            state.metadata["benchmark_run_manifest_sha256"] = result.get(
+                "run_manifest_sha256",
+                hashlib.sha256(manifest.read_bytes()).hexdigest() if manifest.is_file() else None,
+            )
             return state
         return run
     return solve()
@@ -42,7 +50,7 @@ def benchmark_session_solver(*, runtime: SmeltSessionRuntime, model_id: str,
 
 @task
 def smelt_one_iron_plate(*, runtime: SmeltSessionRuntime, model_id: str,
-                          callback: Callable[[CallbackRequest], Mapping[str, Any]],
+                          callback: Callable[[CallbackRequest], Awaitable[Mapping[str, Any]]],
                           session_runner: Callable[..., Mapping[str, Any]] = run_smelt_callback_session) -> Task:
     """Inspect task whose score comes only from benchmark's evaluator."""
     return Task(

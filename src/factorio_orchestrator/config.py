@@ -1,6 +1,7 @@
 """Portable, explicit orchestration configuration."""
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import Any, Mapping
 
 
@@ -22,7 +23,7 @@ class OrchestrationConfig:
     @classmethod
     def from_mapping(cls, value: Mapping[str, Any]) -> "OrchestrationConfig":
         model_id = value.get("model_id")
-        if not isinstance(model_id, str) or "@sha256:" not in model_id:
+        if not isinstance(model_id, str) or not re.fullmatch(r"[^@\s]+@sha256:[0-9a-f]{64}", model_id):
             raise ValueError("model_id must be a pinned digest identity")
         base_url = value.get("model_base_url")
         if not isinstance(base_url, str) or not base_url.startswith(("http://", "https://")):

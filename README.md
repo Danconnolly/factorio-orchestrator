@@ -12,8 +12,11 @@ The first vertical slice will run one Inspect task for `smelt-one-iron-plate`, l
 
 ## Use
 
-Install with `uv sync`. Configuration is explicit and portable; these paths
-are examples, not defaults:
+Install the compatible `factorio-benchmark==0.1.0` and
+`factorio-orchestrator==0.1.0` wheels together, or use `uv sync` from this
+workspace. The orchestrator wheel is not a standalone artifact: its benchmark
+wheel is required. Configuration is explicit and portable; these paths are
+examples, not defaults:
 
 ```json
 {
@@ -35,11 +38,30 @@ benchmark prompt and loopback Streamable HTTP MCP configuration. It uses
 `model="inspect"` with Inspect `agent_bridge` and only broker-discovered MCP
 tools—never generic RCON or Lua tools.
 
+The callback contract is asynchronous and cooperative-cancellation-aware. Its
+scenario wall-clock timeout cancels and awaits the callback (including its MCP
+client context) before the benchmark tears down the broker, client, and server;
+timeout and callback-error outcomes are retained as unscored manifests.
+
 Run the offline checks with:
 
 ```bash
 uv run python -m unittest discover -s tests -v
 uv build
+uv run python scripts/smoke_wheel_metadata.py ../factorio-benchmark/dist/factorio_benchmark-0.1.0-py3-none-any.whl dist/factorio_orchestrator-0.1.0-py3-none-any.whl
+```
+
+The wheel smoke test validates the exact sibling-wheel requirement and installs
+both wheels with `--no-deps` into a temporary target. It is a structural smoke
+test, not a claim that a network-free full dependency installation is possible.
+
+Inspect 0.3.266's fake-eval smoke currently emits AnyIO
+`MemoryObjectReceiveStream` `ResourceWarning`s from site-packages (reproduced
+with this project's fake session runner). Run that smoke with
+`PYTHONWARNINGS='error::ResourceWarning'` while the upstream behavior remains:
+
+```bash
+PYTHONWARNINGS='error::ResourceWarning' uv run python -m unittest discover -s tests -p 'test_inspect_smoke.py' -v
 ```
 
 After saving the JSON above as `orchestrator.json`, a live invocation is
