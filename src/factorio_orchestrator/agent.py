@@ -43,27 +43,27 @@ async def run_openai_agent(request: CallbackRequest, *, config: OpenAICompatible
         raise ValueError("max_turns must be positive")
     url = constrained_mcp_url(request.mcp_config)
     client = client_factory(api_key=config.api_key, base_url=config.base_url)
-    async with mcp_server_http(name="factorio", url=url) as server:
-        available = await mcp_tools(server).tools()
-        definitions = {ToolDef(tool).name: tool for tool in available}
-        tools = [{"type": "function", "function": {
-            "name": definition.name, "description": definition.description,
-            "parameters": definition.parameters.model_dump(),
-        }} for definition in map(ToolDef, available)]
-        messages: list[dict[str, Any]] = [{"role": "user", "content": request.prompt}]
-        async with agent_bridge(client_mcp_servers=False, web_search=False, code_execution=False):
-            for _ in range(config.max_turns):
-                completion = await client.chat.completions.create(model="inspect", messages=messages, tools=tools)
-                message = completion.choices[0].message
-                calls = message.tool_calls or []
-                if not calls:
-                    return {"answer": message.content or ""}
-                messages.append(message.model_dump(exclude_none=True))
-                for call in calls:
-                    import json
-                    tool = definitions.get(call.function.name)
-                    if tool is None:
-                        raise ValueError("model requested a tool outside the constrained MCP server")
-                    result = await tool(**json.loads(call.function.arguments))
-                    messages.append({"role": "tool", "tool_call_id": call.id, "content": str(result)})
+    server = mcp_server_http(name="factorio", url=url)
+    available = await mcp_tools(server).tools()
+    definitions = {ToolDef(tool).name: tool for tool in available}
+    tools = [{"type": "function", "function": {
+        "name": definition.name, "description": definition.description,
+        "parameters": definition.parameters.model_dump(),
+    }} for definition in map(ToolDef, available)]
+    messages: list[dict[str, Any]] = [{"role": "user", "content": request.prompt}]
+    async with agent_bridge(client_mcp_servers=False, web_search=False, code_execution=False):
+        for _ in range(config.max_turns):
+            completion = await client.chat.completions.create(model="inspect", messages=messages, tools=tools)
+            message = completion.choices[0].message
+            calls = message.tool_calls or []
+            if not calls:
+                return {"answer": message.content or ""}
+            messages.append(message.model_dump(exclude_none=True))
+            for call in calls:
+                import json
+                tool = definitions.get(call.function.name)
+                if tool is None:
+                    raise ValueError("model requested a tool outside the constrained MCP server")
+                result = await tool(**json.loads(call.function.arguments))
+                messages.append({"role": "tool", "tool_call_id": call.id, "content": str(result)})
     return {"answer": "turn limit reached"}
