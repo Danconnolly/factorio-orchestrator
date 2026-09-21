@@ -570,12 +570,12 @@ wheels = [
 
 [[package]]
 name = "factorio-benchmark"
-version = "0.1.0"
-source = { directory = "/home/daniel/factorio-benchmark" }
+version = "0.1.1"
+source = { directory = "../factorio-benchmark" }
 
 [[package]]
 name = "factorio-orchestrator"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "factorio-benchmark" },
@@ -586,7 +586,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "factorio-benchmark", directory = "/home/daniel/factorio-benchmark" },
+    { name = "factorio-benchmark", directory = "../factorio-benchmark" },
     { name = "inspect-ai", specifier = "==0.3.266" },
     { name = "mcp", specifier = ">=1.0,<2" },
     { name = "openai", specifier = ">=3,<4" },

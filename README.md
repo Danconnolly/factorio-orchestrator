@@ -12,8 +12,8 @@ The first vertical slice will run one Inspect task for `smelt-one-iron-plate`, l
 
 ## Use
 
-Install the compatible `factorio-benchmark==0.1.0` and
-`factorio-orchestrator==0.1.0` wheels together, or use `uv sync` from this
+Install the compatible `factorio-benchmark==0.1.1` and
+`factorio-orchestrator==0.1.1` wheels together, or use `uv sync` from this
 workspace. The orchestrator wheel is not a standalone artifact: its benchmark
 wheel is required. Configuration is explicit and portable; these paths are
 examples, not defaults:
@@ -56,14 +56,25 @@ timeout and callback-error outcomes are retained as unscored manifests.
 Run the offline checks with:
 
 ```bash
+uv lock --check
 uv run python -m unittest discover -s tests -v
 uv build
-uv run python scripts/smoke_wheel_metadata.py ../factorio-benchmark/dist/factorio_benchmark-0.1.0-py3-none-any.whl dist/factorio_orchestrator-0.1.0-py3-none-any.whl
+uv run python scripts/smoke_wheel_metadata.py ../factorio-benchmark/dist/factorio_benchmark-0.1.1-py3-none-any.whl dist/factorio_orchestrator-0.1.1-py3-none-any.whl
 ```
 
-The wheel smoke test validates the exact sibling-wheel requirement and installs
-both wheels with `--no-deps` into a temporary target. It is a structural smoke
-test, not a claim that a network-free full dependency installation is possible.
+To refresh an existing development virtual environment after this paired
+release, run:
+
+```bash
+uv sync
+```
+
+The wheel smoke test validates the exact sibling-wheel requirement, installs
+both wheels with `--no-deps` into a fresh temporary virtual environment, and
+executes the callback-session construction seam from the installed benchmark
+wheel. Isolated mode and a temporary working directory ensure this cannot pass
+by importing the benchmark source checkout. It is not a claim that a
+network-free full dependency installation is possible.
 
 Inspect 0.3.266's fake-eval smoke can leave AnyIO
 `MemoryObjectReceiveStream` instances for third-party finalization. The smoke
