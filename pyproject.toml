@@ -1,9 +1,9 @@
 [project]
 name = "factorio-orchestrator"
-version = "0.2.1"
+version = "0.2.2"
 requires-python = ">=3.12"
 dependencies = [
-    "factorio-benchmark==0.2.1",
+    "factorio-benchmark==0.2.2",
     "inspect-ai==0.3.266",
     "mcp>=1.0,<2",
     "openai>=3,<4",

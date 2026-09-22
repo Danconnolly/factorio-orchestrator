@@ -25,13 +25,13 @@ def main() -> None:
             raise SystemExit(f"wheel not found: {wheel}")
     benchmark_metadata = metadata(benchmark)
     orchestrator_metadata = metadata(orchestrator)
-    if (benchmark_metadata["Name"], benchmark_metadata["Version"]) != ("factorio-benchmark", "0.2.1"):
-        raise SystemExit("benchmark wheel metadata is not factorio-benchmark 0.2.1")
-    if (orchestrator_metadata["Name"], orchestrator_metadata["Version"]) != ("factorio-orchestrator", "0.2.1"):
-        raise SystemExit("orchestrator wheel metadata is not factorio-orchestrator 0.2.1")
+    if (benchmark_metadata["Name"], benchmark_metadata["Version"]) != ("factorio-benchmark", "0.2.2"):
+        raise SystemExit("benchmark wheel metadata is not factorio-benchmark 0.2.2")
+    if (orchestrator_metadata["Name"], orchestrator_metadata["Version"]) != ("factorio-orchestrator", "0.2.2"):
+        raise SystemExit("orchestrator wheel metadata is not factorio-orchestrator 0.2.2")
     requirements = [requirement.replace(" ", "") for requirement in orchestrator_metadata.get_all("Requires-Dist", [])]
-    if "factorio-benchmark==0.2.1" not in requirements:
-        raise SystemExit("orchestrator wheel must require factorio-benchmark ==0.2.1")
+    if "factorio-benchmark==0.2.2" not in requirements:
+        raise SystemExit("orchestrator wheel must require factorio-benchmark ==0.2.2")
     with tempfile.TemporaryDirectory() as temporary_directory:
         environment = Path(temporary_directory) / "venv"
         python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
@@ -47,8 +47,8 @@ from unittest.mock import patch
 from factorio_benchmark.smelt_session import SmeltSessionRuntime, run_smelt_callback_session
 from factorio_benchmark.assets import runtime_assets
 
-assert importlib.metadata.version("factorio-benchmark") == "0.2.1"
-assert importlib.metadata.version("factorio-orchestrator") == "0.2.1"
+assert importlib.metadata.version("factorio-benchmark") == "0.2.2"
+assert importlib.metadata.version("factorio-orchestrator") == "0.2.2"
 assert "site-packages" in Path(__import__("factorio_benchmark").__file__).parts
 assets = runtime_assets()
 assert all(path.is_file() for path in (assets.broker, assets.scenario, assets.baseline))
