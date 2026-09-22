@@ -12,8 +12,8 @@ The first vertical slice will run one Inspect task for `smelt-one-iron-plate`, l
 
 ## Use
 
-Install the compatible `factorio-benchmark==0.2.0` and
-`factorio-orchestrator==0.2.0` wheels together, or use `uv sync` from this
+Install the compatible `factorio-benchmark==0.2.1` and
+`factorio-orchestrator==0.2.1` wheels together, or use `uv sync` from this
 workspace. The orchestrator wheel is not a standalone artifact: its benchmark
 wheel is required. Configuration is explicit and portable; these paths are
 examples, not defaults:
@@ -59,7 +59,7 @@ Run the offline checks with:
 uv lock --check
 uv run python -m unittest discover -s tests -v
 uv build
-uv run python scripts/smoke_wheel_metadata.py ../factorio-benchmark/dist/factorio_benchmark-0.2.0-py3-none-any.whl dist/factorio_orchestrator-0.2.0-py3-none-any.whl
+uv run python scripts/smoke_wheel_metadata.py ../factorio-benchmark/dist/factorio_benchmark-0.2.1-py3-none-any.whl dist/factorio_orchestrator-0.2.1-py3-none-any.whl
 ```
 
 To refresh an existing development virtual environment after this paired
