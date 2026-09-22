@@ -570,12 +570,12 @@ wheels = [
 
 [[package]]
 name = "factorio-benchmark"
-version = "0.1.4"
+version = "0.2.0"
 source = { directory = "../factorio-benchmark" }
 
 [[package]]
 name = "factorio-orchestrator"
-version = "0.1.5"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "factorio-benchmark" },
